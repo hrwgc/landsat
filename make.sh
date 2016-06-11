@@ -45,14 +45,15 @@ function onEachItem() {
 };
 
 function makeIndexPage() {
-    data=$(cat $workDir/tmp/$dateId | tr -d '\n');
-    cat $workDir/fixtures/index-template.html | \
-      sed "s~{{data}}~${data}~g" | tidy -qim  > $workDir/index.html;
+    cat $workDir/fixtures/index-template.html > $workDir/tmp/index.html;
+    cat $workDir/tmp/$dateId >> $workDir/tmp/index.html;
+    echo "</tbody></table></body></html>" >> $workDir/tmp/index.html;
+    cat $workDir/tmp/index.html | tidy -qim  > $workDir/index.html;
 }
 
 export -f onEachItem;
 export -f makeScenePage;
-parallel onEachItem "{}" ::: `tail -n+2 "$csv" | head -n10`
+tail -n+2 "$csv" | head -n1000 | xargs -L1 -n100 | parallel  -d ' ' onEachItem "{}"
 makeIndexPage;
-rm -rf $workDir/tmp;
+rm -rf $workDir/tmp/*;
 set +a;
