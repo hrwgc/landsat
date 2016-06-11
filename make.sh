@@ -18,23 +18,30 @@ sceneHtml="<tr><td>{{data}}</td></tr>"
 
 function makeScenePage() {
     sceneId=$1;
-    sceneEntry="$2";
-    [ -f "scenes/${sceneId}.html" ] || {
+    wrsPath=$2;
+    wrsRow=$3;
+    sceneEntry="$4";
+    mkdir -p $workDir/scenes/${wrsPath}/${wrsRow};
+
+    [ -f "$workDir/scenes/${wrsPath}/${wrsRow}/${sceneId}.html" ] || {
         html=$(cat $workDir/fixtures/scene-template.html);
         html=$(echo "$html" | sed "s/{{sceneId}}/$sceneId/g");
         html=$(echo "$html" | sed "s~{{data}}~$sceneEntry~1");
-        echo $html | tidy -qim > $workDir/scenes/${sceneId}.html;
+        echo $html | \
+          tidy -qim > $workDir/scenes/${wrsPath}/${wrsRow}/${sceneId}.html;
     }
 }
 
 
 function onEachItem() {
     sceneId=$(cut -d, -f1 <<< $1);
-    sensor=$(cut -c1-3 <<< $sceneId)
+    sensor=$(cut -c1-3 <<< $sceneId);
+    wrsPath=$(cut -c4-6 <<< $sceneId);
+    wrsRow=$(cut -c7-9 <<< $sceneId);
     metadata_url="$url_base/${url_stem}/$sceneId"
-    sceneHtml="<tr><td><a href=\"/landsat/scenes/$sceneId.html\">$sceneId</a></td><td>View on <a href=\"$metadata_url\">USGS</a>.</td></tr>"
+    sceneHtml="<tr><td><a href=\"/landsat/scenes/$wrsPath/$wrsRow/$sceneId.html\">$sceneId</a></td><td>View on <a href=\"$metadata_url\">USGS</a>.</td></tr>"
     echo "$sceneHtml" >> $workDir/tmp/$dateId;
-    makeScenePage $sceneId "$sceneHtml" || return
+    makeScenePage $sceneId $wrsPath $wrsRow "$sceneHtml" || return
 };
 
 function makeIndexPage() {
